@@ -1,0 +1,36 @@
+telegram:
+  api_id: 12345
+  api_hash: ""
+  bot_token: ""
+  privilege:
+    admins: []
+    use_whitelist: True
+    whitelist: []
+    use_blacklist: False
+    blacklist: []
+  use_proxy: False
+  proxy:
+    scheme: ""
+    hostname: "1.1.1.1"
+    port: 1234
+    username: "username"
+    password: "password"
+
+ai:
+  providers: 
+    glm:
+      api_key: ""
+      api_endpoint: ""
+      model: glm-4.5-air
+      privilege:
+        use_whitelist: True
+        whitelist: [] 
+      proxy:
+        enabled: False
+        url : ""
+
+  maximum_message: 50
+
+
+db:
+  path: "./rubish.sqlite3"
