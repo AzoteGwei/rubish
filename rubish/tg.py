@@ -74,7 +74,7 @@ async def cmd_summerize(client: Client, msg: Message):
     else:
         userid = chat_id
     if not msg.reply_to_message:
-        await msg.reply_text("⚠️ 用法错误：请 **回复 (Reply)** 一条需要处理的消息。")
+        await msg.reply_text(_('cmd.summerize.usage',msg.summary_language_code))
         return
     reply_id = msg.reply_to_message.id
     table_name = chatid2tablename(chat_id)
@@ -84,7 +84,7 @@ async def cmd_summerize(client: Client, msg: Message):
     try:
         cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
         if not cur.fetchone():
-            await msg.reply_text("❌ 入群前的消息无法总结")
+            await msg.reply_text(_('cmd.summerize.too_early',msg.summary_language_code))
             return
 
         # 修改点：查询从 reply_id 开始，到当前命令消息之前的所有消息
@@ -95,13 +95,13 @@ async def cmd_summerize(client: Client, msg: Message):
             LEFT JOIN sender s ON t.sender_id = s.id
             WHERE t.message_id >= ? AND t.message_id < ?
             ORDER BY t.message_id ASC
-            LIMIT 500  -- 建议加个硬上限，防止回复了一年前的消息导致 Token 撑爆 AI 接口
+            LIMIT 500
         """, (reply_id, msg.id))
         
         rows = cur.fetchall()
 
         if not rows:
-            await msg.reply_text("❌ 未能提取到该区间的有效消息。")
+            await msg.reply_text(_('cmd.summerize.invaild_scope',msg.summary_language_code))
             return
             
         # 将查询到的多行记录拼装成带用户名的对话格式
@@ -117,18 +117,18 @@ async def cmd_summerize(client: Client, msg: Message):
         target_text = "\n".join(chat_history)
 
         if not target_text:
-            await msg.reply_text("⚠️ 该区间的消息均没有提取到文本内容，无法进行 AI 处理。")
+            await msg.reply_text(_('cmd.summerize.text_missing',msg.summary_language_code))
             return
 
     except Exception as e:
         logger.error(f"DB Query Error in cmd_summerize: {e}")
-        await msg.reply_text("数据库查询出错，请联系管理员。")
+        await msg.reply_text(_('cmd.summerize.db_error',msg.summary_language_code))
         return
     finally:
         cur.close()
 
     if not config.ai_providers or len(config.ai_providers) == 0:
-        await msg.reply_text("❌ 系统未配置 AI 提供商 (ai_providers 为空)")
+        await msg.reply_text(_('cmd.summerize.provider_missing',msg.summary_language_code))
         return
     
     if msg.command[0] in config.ai_providers:
@@ -140,12 +140,12 @@ async def cmd_summerize(client: Client, msg: Message):
     if (config.ai_providers[preferred_provider]['privilege']['use_whitelist'] and \
             userid not in config.ai_providers[preferred_provider]['privilege']['whitelist']) and\
             userid not in config.telegram_admins:
-        await msg.reply_text("❌ 您无法使用 {} 作为总结模型。".format(preferred_provider))
+        await msg.reply_text(_('cmd.summerize.no_permission',msg.summary_language_code).format(preferred_provider))
         return
     # if 
     additional_prompt = " ".join(msg.command[1:]) if len(msg.command) > 1 else ""
 
-    processing_msg = await msg.reply_text("⏳ AI 正在思考中，请稍候...")
+    processing_msg = await msg.reply_text(_('cmd.summerize.pondering',msg.summary_language_code))
     logger.debug("[{}/{}]Triggered {}",getattr(msg.chat,'full_name',getattr(msg.chat,'title','Unknown')),msg.from_user.full_name if msg.from_user else 'anon',msg.id,msg.content) # type: ignore
     try:
 
@@ -154,7 +154,7 @@ async def cmd_summerize(client: Client, msg: Message):
         
     except Exception as e:
         # 捕获 ai.py 抛出的所有异常，友善地提示给用户
-        await processing_msg.edit_text(f"❌ AI 处理失败: {str(e)[:100]}")
+        await processing_msg.edit_text(_('cmd.summerize.ai_error',msg.summary_language_code).format(str(e)[:100]))
 
 def track_sender(cur, user: User | None) -> int | None:
     """

@@ -6,6 +6,17 @@ TRANSLATIONS = {
             "id":{
                 "nosender":"Current ChatID is `{}`.",
                 'withsender':"Current ChatID is `{}`. \nYour UserID is `{}`."
+            },
+            "summerize":{
+                "usage":"Please **reply** to a message to begin summerize.",
+                "too_early":"This message is **too early** to summerize.",
+                "invaild_scope":"No **vaild** message was found to summerize.",
+                "text_missing":"No **text** message was found to summerize with.",
+                "db_error":"DB Error. \n**PLEASE CONTACT ADMINS.**",
+                "provider_missing":"This bot **didn't** configured ai providers.",
+                "no_permission": "You have **not enough permission** to use {} as summery model.",
+                "pondering": "AI Summerizing...",
+                "ai_error":"AI raised error: {} \n**PLEASE CONTACT ADMINS.**"
             }
         }
     },

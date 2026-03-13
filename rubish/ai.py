@@ -12,7 +12,7 @@ async def request_ai(provider_config: dict, target_text: str, additional_prompt:
     model = provider_config.get("model", "gpt-3.5-turbo") # 建议配置文件加个 model 字段兜底
 
     if not api_key or not api_endpoint:
-        raise ValueError("AI Provider 配置缺失 api_key 或 api_endpoint")
+        raise ValueError("api_key or api_endpoint missing for profile")
 
     # 1. 组装 System Prompt
     system_prompt = "你是一个得力的群聊助手。请根据用户的要求处理提供的消息内容。你的回复需要简练而完整的描述发生的事情，整理出发展的顺序。"
@@ -48,15 +48,15 @@ async def request_ai(provider_config: dict, target_text: str, additional_prompt:
                     reply_content = data.get("choices", [{}])[0].get("message", {}).get("content", "")
                     
                     if not reply_content:
-                        raise ValueError("AI 返回了 HTTP 200，但解析出的文本内容为空。")
+                        raise ValueError("HTTP[200]/EMPTY_RESULT")
                     return reply_content
                 else:
                     error_info = await resp.text()
                     logger.error(f"AI API HTTP Error {resp.status}: {error_info}")
-                    raise ConnectionError(f"API 请求失败 (状态码: {resp.status})")
+                    raise ConnectionError(f"HTTP[{resp.status}]/REQUEST_FAILED")
                     
     except TimeoutError:
-        raise TimeoutError("API 请求超时，大模型节点可能负载过高。")
+        raise TimeoutError("OVERLOADED")
     except Exception as e:
         logger.error(f"failed to request ai: {e}")
         raise e # 继续向上抛出，交由 bot 模块回复给用户
