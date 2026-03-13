@@ -95,7 +95,7 @@ async def cmd_summerize(client: Client, msg: Message):
             LEFT JOIN sender s ON t.sender_id = s.id
             WHERE t.message_id >= ? AND t.message_id < ?
             ORDER BY t.message_id ASC
-            LIMIT 500
+            LIMIT {config.ai_max_msgs if userid not in config.telegram_admins else 500}
         """, (reply_id, msg.id))
         
         rows = cur.fetchall()
@@ -142,7 +142,7 @@ async def cmd_summerize(client: Client, msg: Message):
             userid not in config.telegram_admins:
         await msg.reply_text(_('cmd.summerize.no_permission',msg.summary_language_code).format(preferred_provider))
         return
-    # if 
+    
     additional_prompt = " ".join(msg.command[1:]) if len(msg.command) > 1 else ""
 
     processing_msg = await msg.reply_text(_('cmd.summerize.pondering',msg.summary_language_code))
